@@ -155,6 +155,7 @@ function build_mp3lame {
     fi
   fi
 
+  cp ../lame-3.100-symbols.patch .
   rm -rf lame-3.100
   tar zxf $filename
   patch lame-3.100/include/libmp3lame.sym lame-3.100-symbols.patch
@@ -354,6 +355,9 @@ function build_ffmpeg {
   make install
   cd -
 }
+
+mkdir -p thirdparty
+cd thirdparty
 
 if [[ "$build_all" -eq 1 ]] || [[ "$build_openssl" -eq 1 ]]; then
   build_openssl
