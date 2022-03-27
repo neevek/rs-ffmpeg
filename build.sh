@@ -350,6 +350,11 @@ function build_ffmpeg {
     basic_conf="$basic_conf --disable-optimizations --disable-stripping"
   fi
 
+  echo "------------------------------------------"
+  echo "confiuring..."
+  echo "$basic_conf --extra-cflags=$extra_cflags --extra-ldflags=$extra_ldflags"
+  echo "------------------------------------------"
+
   ./configure $basic_conf --extra-cflags="$extra_cflags" --extra-ldflags="$extra_ldflags"
   do_make
   make install
