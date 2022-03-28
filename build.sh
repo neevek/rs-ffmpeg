@@ -309,7 +309,7 @@ function build_ffmpeg {
     --pkg-config-flags=--static"
 
     extra_cflags="-I../x264/build/include -I../lame-3.100/build/include -I../openssl/build/include"
-    extra_ldflags="-L../x264/build/lib -lx264 -L../lame-3.100/build/lib -lmp3lame -L../openssl/build/lib -lssl -lcrypto"
+    extra_ldflags="-L../x264/build/lib -L../lame-3.100/build/lib -L../openssl/build/lib -lx264 -lmp3lame -lssl -lcrypto"
     
   if [[ $arch == "arm64" ]] || [[ $arch == "arm" ]]; then
     setup_android_toolchain
@@ -323,7 +323,7 @@ function build_ffmpeg {
     ar=$android_prebuilt/${target_triplet}/bin/ar
     as=$android_prebuilt/${target_triplet}/bin/as
     strip=$android_prebuilt/${target_triplet}/bin/strip
-    pkg_config=$android_prebuilt/bin/llvm-config
+    ranlib=$android_prebuilt/${target_triplet}/bin/ranlib
     
     echo "ndk root: [$ANDROID_NDK_ROOT]"
     echo "arch: [$arch]"
@@ -341,7 +341,7 @@ function build_ffmpeg {
       basic_conf="$basic_conf --arch=arm"
     fi
 
-    basic_conf="$basic_conf --pkg-config=$pkg_config --ar=$ar --strip=$strip --ld=$ld --cc=$cc --as=$cc --target-os=android --enable-cross-compile"
+    basic_conf="$basic_conf --ranlib=$ranlib --ar=$ar --strip=$strip --ld=$ld --cc=$cc --as=$cc --target-os=android --enable-cross-compile"
     extra_cflags="$extra_cflags -I$include_dir"
     extra_ldflags="$extra_ldflags -L$lib_dir1 -L$lib_dir2 -lm -lz"
   fi

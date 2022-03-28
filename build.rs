@@ -71,7 +71,6 @@ fn main() {
     let proj_dir = std::env::var("CARGO_MANIFEST_DIR").unwrap();
     let ffmpeg_build_dir = format!("{}/thirdparty/ffmpeg/build", out_dir);
     let ffmpeg_include_dir = format!("{}/include", ffmpeg_build_dir);
-    let ffmpeg_lib_dir = format!("{}/lib", ffmpeg_build_dir);
     let build_script = format!("{}/build.sh", proj_dir);
 
     let args = format!("{} {}", target_arch, build_type);
@@ -143,14 +142,26 @@ fn main() {
         .write_to_file(format!("{}/bindings.rs", out_dir))
         .expect("Couldn't write bindings!");
 
+    let ffmpeg_lib_dir = format!("{}/thirdparty/ffmpeg/build/lib", out_dir);
+    let openssl_lib_dir = format!("{}/thirdparty/openssl/build/lib", out_dir);
+    let x264_lib_dir = format!("{}/thirdparty/x264/build/lib", out_dir);
+    let lame_lib_dir = format!("{}/thirdparty/lame-3.100/build/lib", out_dir);
+
     println!("cargo:rustc-link-search=all={}", &ffmpeg_lib_dir);
-    println!("cargo:rustc-link-lib=avformat");
-    println!("cargo:rustc-link-lib=avcodec");
-    println!("cargo:rustc-link-lib=avfilter");
-    println!("cargo:rustc-link-lib=swresample");
-    println!("cargo:rustc-link-lib=swscale");
-    println!("cargo:rustc-link-lib=avutil");
-    println!("cargo:rustc-link-lib=avdevice");
+    println!("cargo:rustc-link-search=all={}", &openssl_lib_dir);
+    println!("cargo:rustc-link-search=all={}", &x264_lib_dir);
+    println!("cargo:rustc-link-search=all={}", &lame_lib_dir);
+    println!("cargo:rustc-link-lib=static=avformat");
+    println!("cargo:rustc-link-lib=static=avcodec");
+    println!("cargo:rustc-link-lib=static=avfilter");
+    println!("cargo:rustc-link-lib=static=swresample");
+    println!("cargo:rustc-link-lib=static=swscale");
+    println!("cargo:rustc-link-lib=static=avutil");
+    println!("cargo:rustc-link-lib=static=avdevice");
+    println!("cargo:rustc-link-lib=static=ssl");
+    println!("cargo:rustc-link-lib=static=crypto");
+    println!("cargo:rustc-link-lib=static=x264");
+    println!("cargo:rustc-link-lib=static=mp3lame");
     println!("cargo:rustc-link-lib=z");
     println!("cargo:rustc-link-lib=m");
 }
