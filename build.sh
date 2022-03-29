@@ -344,6 +344,8 @@ function build_ffmpeg {
     basic_conf="$basic_conf --ranlib=$ranlib --ar=$ar --strip=$strip --ld=$ld --cc=$cc --as=$cc --target-os=android --enable-cross-compile"
     extra_cflags="$extra_cflags -I$include_dir"
     extra_ldflags="$extra_ldflags -L$lib_dir1 -L$lib_dir2 -lm -lz"
+  else
+    basic_conf="$basic_conf --disable-bzlib --disable-lzma"
   fi
 
   if [[ "$debug_ffmpeg" -eq 1 ]]; then

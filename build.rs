@@ -55,6 +55,7 @@ where
 
 fn main() {
     println!("cargo:rerun-if-changed=build.rs");
+    println!("cargo:rerun-if-changed=build.sh");
     
     let target = env::var("TARGET").unwrap();
 
@@ -164,4 +165,13 @@ fn main() {
     println!("cargo:rustc-link-lib=static=mp3lame");
     println!("cargo:rustc-link-lib=z");
     println!("cargo:rustc-link-lib=m");
+
+    if target.ends_with("apple-darwin") {
+        println!("cargo:rustc-link-search=framework={}", "/System/Library/Frameworks");
+        println!("cargo:rustc-link-lib=framework=VideoToolbox");
+        println!("cargo:rustc-link-lib=framework=AudioToolbox");
+        println!("cargo:rustc-link-lib=framework=CoreMedia");
+        println!("cargo:rustc-link-lib=framework=CoreVideo");
+        println!("cargo:rustc-link-lib=framework=CoreFoundation");
+    }
 }
