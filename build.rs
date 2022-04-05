@@ -53,14 +53,8 @@ where
     builder
 }
 
-fn main() {
-    println!("cargo:rerun-if-changed=build.rs");
-    println!("cargo:rerun-if-changed=build.sh");
-    
+fn build(build_type: &str) {
     let target = env::var("TARGET").unwrap();
-
-    // build types for build.sh: [--build-openssl --build-mp3lame --build-x264 --build-ffmpeg --build-all --debug-ffmpeg]
-    let build_type = env::var("RS_FFMPEG_BUILD_TYPE").unwrap_or("".into());
 
     let target_arch = match target.as_str() {
         "aarch64-linux-android" => "arm64",
@@ -92,26 +86,26 @@ fn main() {
         "libavcodec/vdpau.h",
         "libavcodec/xvmc.h",
     ];
-    let mut bindings_builder = bindgen::Builder::default()
-        .clang_arg(format!("-I{}/include", ffmpeg_build_dir));
+    let mut bindings_builder =
+        bindgen::Builder::default().clang_arg(format!("-I{}/include", ffmpeg_build_dir));
 
     if target_arch == "native" {
         ignored_headers.push("libavutil/hwcontext_vulkan.h");
-        
     } else {
         ignored_headers.push("libavutil/hwcontext_videotoolbox.h");
         ignored_headers.push("libavcodec/videotoolbox.h");
-        
+
         let ndk_root = env::var("ANDROID_NDK_ROOT").unwrap();
         // the following code only compiles on MacOS
-        bindings_builder = bindings_builder
-            .clang_arg(format!("-I{}/toolchains/llvm/prebuilt/darwin-x86_64/sysroot/usr/include", &ndk_root));
+        bindings_builder = bindings_builder.clang_arg(format!(
+            "-I{}/toolchains/llvm/prebuilt/darwin-x86_64/sysroot/usr/include",
+            &ndk_root
+        ));
         if target_arch == "arm64" {
             bindings_builder = bindings_builder
                 .clang_arg(format!("-I{}/toolchains/llvm/prebuilt/darwin-x86_64/sysroot/usr/include/aarch64-linux-android", &ndk_root));
             bindings_builder = bindings_builder
                 .clang_arg(format!("-L{}/toolchains/llvm/prebuilt/darwin-x86_64/sysroot/usr/lib/aarch64-linux-android/30", &ndk_root));
-            
         } else {
             bindings_builder = bindings_builder
                 .clang_arg(format!("-I{}/toolchains/llvm/prebuilt/darwin-x86_64/sysroot/usr/include/arm-linux-androideabi", &ndk_root));
@@ -131,18 +125,30 @@ fn main() {
 
     let ffmpeg_include_dir = PathBuf::from(&ffmpeg_include_dir);
     let bindings_builder = add_header_binding(bindings_builder, &ffmpeg_include_dir, &mut filter);
-    
+
     let bindings = bindings_builder
-        .allowlist_type("av.*")
-        .allowlist_type("AV.*")
-        .allowlist_function("av.*")
-        .allowlist_function("AV.*")
-        .generate().expect("Unable to generate");
+        .allowlist_type("(av|AV).*")
+        .allowlist_function("(av|AV).*")
+        .allowlist_var("(av|AV).*")
+        .generate()
+        .expect("Unable to generate");
 
     bindings
         .write_to_file(format!("{}/bindings.rs", out_dir))
         .expect("Couldn't write bindings!");
+}
 
+fn main() {
+    println!("cargo:rerun-if-changed=build.rs");
+    println!("cargo:rerun-if-changed=build.sh");
+
+    // build types for build.sh: [--build-openssl --build-mp3lame --build-x264 --build-ffmpeg --build-all --debug-ffmpeg]
+    let build_type = env::var("RS_FFMPEG_BUILD_TYPE").unwrap_or("".into());
+    if !build_type.is_empty() {
+        build(&build_type);
+    }
+
+    let out_dir = env::var("OUT_DIR").unwrap();
     let ffmpeg_lib_dir = format!("{}/thirdparty/ffmpeg/build/lib", out_dir);
     let openssl_lib_dir = format!("{}/thirdparty/openssl/build/lib", out_dir);
     let x264_lib_dir = format!("{}/thirdparty/x264/build/lib", out_dir);
@@ -166,8 +172,12 @@ fn main() {
     println!("cargo:rustc-link-lib=z");
     println!("cargo:rustc-link-lib=m");
 
+    let target = env::var("TARGET").unwrap();
     if target.ends_with("apple-darwin") {
-        println!("cargo:rustc-link-search=framework={}", "/System/Library/Frameworks");
+        println!(
+            "cargo:rustc-link-search=framework={}",
+            "/System/Library/Frameworks"
+        );
         println!("cargo:rustc-link-lib=framework=VideoToolbox");
         println!("cargo:rustc-link-lib=framework=AudioToolbox");
         println!("cargo:rustc-link-lib=framework=CoreMedia");
